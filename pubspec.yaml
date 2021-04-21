@@ -21,6 +21,11 @@ dependencies:
   wifi_info_flutter: ^2.0.0
   flutter_local_notifications: ^5.0.0+1
   google_maps_flutter: ^2.0.3
+  sliding_up_panel: 
+    git:
+      url: https://github.com/akshathjain/sliding_up_panel
+      ref: dev/null-safety
+
 
 dev_dependencies:
   flutter_test:

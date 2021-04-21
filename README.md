@@ -13,7 +13,7 @@ Flutter packages
 	• Geolocator (calculate the distance towards geofence location)
 	• Flutter_local_notifications (notifying user of entering geofencing location)
     • Google_maps_flutter
-    • liquid_swipe
+    • sliding_up_panel
 	
 Damansara Petronas location:-
 Address - Lot 1423, Jalan PJU 1A/20, Ara Damansara, 47301 Petaling Jaya, Selangor
