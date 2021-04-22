@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_geofence/geofence.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:geofence/util/constants.dart';
-import 'package:geofence/view/home/home.dart';
+import 'package:geofence_test/util/constants.dart';
+import 'package:geofence_test/view/home/home.dart';
+
+import 'util/notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,6 +18,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  final Notifications notification = Notifications();
+
   @override
   void initState() {
     super.initState();
@@ -27,9 +31,9 @@ class _MyAppState extends State<MyApp> {
 
     final IOSInitializationSettings initializationSettingsIOS =
         IOSInitializationSettings(
-      requestSoundPermission: false,
-      requestBadgePermission: false,
-      requestAlertPermission: false,
+      requestSoundPermission: true,
+      requestBadgePermission: true,
+      requestAlertPermission: true,
       onDidReceiveLocalNotification:
           (int? id, String? title, String? body, String? payload) async {},
     );
@@ -50,10 +54,6 @@ class _MyAppState extends State<MyApp> {
     Geofence.initialize();
 
     Geofence.requestPermissions();
-
-    Geofence.startListening(GeolocationEvent.entry, (entry) {
-      scheduleNotification("Entry of a georegion", "Welcome to: ${entry.id}");
-    });
   }
 
   @override
@@ -65,24 +65,5 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Home(),
     );
-  }
-
-  void scheduleNotification(String title, String subtitle) {
-    print("scheduling one with $title and $subtitle");
-    var rng = new Random();
-    Future.delayed(Duration(seconds: 5)).then((result) async {
-      var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-          'your channel id', 'your channel name', 'your channel description',
-          importance: Importance.high,
-          priority: Priority.high,
-          ticker: 'ticker');
-      var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-      var platformChannelSpecifics = NotificationDetails(
-          android: androidPlatformChannelSpecifics,
-          iOS: iOSPlatformChannelSpecifics);
-      await flutterLocalNotificationsPlugin.show(
-          rng.nextInt(100000), title, subtitle, platformChannelSpecifics,
-          payload: 'item x');
-    });
   }
 }

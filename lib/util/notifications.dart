@@ -4,17 +4,26 @@ class Notifications {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> insideNotification() async {
+  Future<void> scheduleNotification(
+      {required String title, required String subtitle}) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails('notification', 'notification',
             'You are now within setel payment zone.',
+            // sound: RawResourceAndroidNotificationSound('pristine'),
+            playSound: true,
+            icon: 'app_icon',
             importance: Importance.max,
             priority: Priority.high,
             showWhen: false);
-    const NotificationDetails platformChannelSpecifics =
-        NotificationDetails(android: androidPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(0, 'Payment mode enabled',
-        'You are now within setel payment zone.', platformChannelSpecifics,
+
+    const IOSNotificationDetails iOSPlatformChannelSpecifics =
+        IOSNotificationDetails(threadIdentifier: 'thread_id');
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+        iOS: iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.schedule(0, title, subtitle,
+        DateTime.now().add(Duration(seconds: 5)), platformChannelSpecifics,
         payload: 'item x');
   }
 }
