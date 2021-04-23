@@ -1,3 +1,9 @@
+![](display/demo_1.gif)
+<h1> Demo 1</h1>
+<br />
+![](display/demo_2.gif)
+<h1> Demo 2</h1>
+
 Requirements
 
 	• Setup Geofencing area
@@ -13,19 +19,38 @@ Flutter packages
 	• geofencing / flutter_geofence
 	• Geolocator (calculate the distance towards geofence location)
 	• Flutter_local_notifications (notifying user of entering geofencing location)
-    • Google_maps_flutter
-    • sliding_up_panel
+	• Google_maps_flutter
+	
+ToDos 
+Main function: 
 
-Damansara Petronas location:-
-Address - Lot 1423, Jalan PJU 1A/20, Ara Damansara, 47301 Petaling Jaya, Selangor
-Coordinates - lat 3.120850, long 101.590510
-3.1234, 101.5755
+	• Create geofence streams to listen to the current user location and triggers an alert whenever user is in targeted vicinities (500m) 
+	• UI should display if the user is inside or outside the vicinities 
+	• Set a few locations (petronas stations) to be targeted vicinities 
+	• If user is connected to the vicinity wifi then consider the user to be inside the zone 
+	• Ensure that alert still triggers when app is not running 
 
-Petronas Alam Sutera
+Additional functions: 
+
+	• Display Google map in app UI  
+	• Mark user location in realtime 
+
+
+Locations: 
+<br />
+<b>Petronas Ara Damansara</b>
+<br />
+Coordinates - lat 3.1234, long 101.5755
+
+<b>Petronas Alam Sutera</b>
+<br />
 Coordinates - lat 3.052591, long 101.6527169
 
-Petronas Axis shah alam
+<b>Petronas Axis shah alam</b>
+<br />
 Coordinates - lat 3.0270851, long 101.5420121
 
-Petronas Bandar Baru Salak Tinggi
+<b>Petronas Bandar Baru Salak Tinggi</b>
+<br />
 Coordinates - lat 2.806143, long 101.7163006
+

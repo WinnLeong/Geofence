@@ -5,7 +5,6 @@ import 'package:geolocator/geolocator.dart';
 class Location {
   double latitude = 0;
   double longitude = 0;
-  double distanceInMeters = 0;
 
   Future<void> getCurrentLocation() async {
     Position position = await Geolocator.getCurrentPosition(
@@ -27,13 +26,9 @@ class Location {
     required double destLatitude,
     required double destLongitude,
   }) async {
-    double distance;
-
-    distanceInMeters = Geolocator.distanceBetween(
+    double distanceInMeters = Geolocator.distanceBetween(
         userLatitude, userLongitude, destLatitude, destLongitude);
 
-    distance = distanceInMeters;
-
-    return distance;
+    return distanceInMeters;
   }
 }

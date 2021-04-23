@@ -23,7 +23,7 @@ class Notifications {
         android: androidPlatformChannelSpecifics,
         iOS: iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.schedule(0, title, subtitle,
-        DateTime.now().add(Duration(seconds: 5)), platformChannelSpecifics,
+        DateTime.now().add(Duration(seconds: 2)), platformChannelSpecifics,
         payload: 'item x');
   }
 }

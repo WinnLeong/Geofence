@@ -2,9 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_geofence/geofence.dart';
+import 'package:geofence_test/services/model/zone_model.dart';
 import 'package:geofence_test/services/repository/zone_repo.dart';
 import 'package:geofence_test/util/custom_dialog.dart';
 import 'package:geofence_test/util/loading_model.dart';
+import 'package:geofence_test/util/local_storage.dart';
 import 'package:geofence_test/util/location.dart';
 import 'package:geofence_test/util/notifications.dart';
 import 'package:geofence_test/util/wifi_info.dart';
@@ -19,10 +21,11 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final Notifications notification = Notifications();
+  final LocalStorage localStorage = LocalStorage();
 
   // repo
-  final zoneLocations = ZoneRepo().getZoneLocations();
-  final locationWifiInfo = ZoneRepo().getWifiNames();
+  final List<LocationData> zoneLocations = ZoneRepo().getZoneLocations();
+  final List<WifiInfo> locationWifiInfo = ZoneRepo().getWifiNames();
 
   // flutter_wifi_info
   final GetWifiInfo deviceWifiInfo = GetWifiInfo();
@@ -42,20 +45,14 @@ class _HomeState extends State<Home> {
     zoom: 12,
   );
 
-  final statusTextStyle = TextStyle(
+  final TextStyle statusTextStyle = TextStyle(
     fontSize: 32,
   );
-
-  // double locationLat = 0.0;
-  // double locationLong = 0.0;
-
-  // double distanceInMeters = 0.0;
 
   @override
   void initState() {
     super.initState();
-
-    _getCurrentLocation();
+    _getLocationPermission();
     _addGeoregion();
 
     // Geofence.getCurrentLocation().then((Coordinate? coordinate) {
@@ -64,21 +61,94 @@ class _HomeState extends State<Home> {
     // });
 
     Geofence.startListening(GeolocationEvent.entry, (entry) {
-      _getZoneStatus('entry');
+      _getZoneStatus(entry: 'ENTRY');
     });
 
     Geofence.startListening(GeolocationEvent.exit, (exit) {
-      _getZoneStatus('exit');
+      _getZoneStatus(entry: 'EXIT');
     });
 
-    // _listenForLocationChanges();
+    _listenForLocationChanges();
   }
 
-  Future<void> _getZoneStatus(entry) async {
+  _listenForLocationChanges() {
+    Geofence.startListeningForLocationChanges();
+    Geofence.backgroundLocationUpdated.stream.listen((event) async {
+      // check if user is still in the zone
+
+      String? wifiName = await deviceWifiInfo.getWifiName();
+      String? savedWifiName = await localStorage.getWifiName();
+
+      double? zoneLatitude = await localStorage.getLocationLatitude();
+      double? zoneLongitude = await localStorage.getLocationLongitude();
+
+      if (zoneLatitude != 0.0 && zoneLongitude != 0.0) {
+        await location.getCurrentLocation();
+
+        double distanceInMeters = await location.getDistance(
+          userLatitude: location.latitude,
+          userLongitude: location.longitude,
+          destLatitude: zoneLatitude!,
+          destLongitude: zoneLongitude!,
+        );
+
+        // if wifiName is available
+        if (wifiName != null) {
+          if (wifiName == savedWifiName || distanceInMeters < 500) {
+            setState(() {
+              _isInsideZone = true;
+            });
+
+            print('User is still in geofence zone.');
+          } else {
+            setState(() {
+              _isInsideZone = false;
+            });
+
+            print('User is no longer in geofence zone.');
+
+            localStorage.clear();
+          }
+        }
+        // else {
+        //   // determine the zone based on distance if there is no wifi info
+        //   if (distanceInMeters < 500) {
+        //     setState(() {
+        //       _isInsideZone = true;
+        //     });
+
+        //     print('User is still in geofence zone.');
+        //   } else {
+        //     setState(() {
+        //       _isInsideZone = false;
+        //     });
+
+        //     print('User is no longer in geofence zone.');
+
+        //     localStorage.clear();
+        //   }
+        // }
+      }
+    });
+
+    setState(() {});
+  }
+
+  Future<void> _getZoneStatus({entry}) async {
     String? wifiName = await deviceWifiInfo.getWifiName();
     int i = 0;
 
-    /* if (wifiName != null) {
+    // if zoneStatus is entry
+    if (entry == 'ENTRY') {
+      await location.getCurrentLocation();
+
+      localStorage.saveLocationLatitude(location.latitude);
+      localStorage.saveLocationLongitude(location.longitude);
+    }
+
+    if (wifiName != null) {
+      localStorage.saveWifiName(wifiName);
+
       while (i < locationWifiInfo.length) {
         if (wifiName == locationWifiInfo[i].name) {
           setState(() {
@@ -104,38 +174,30 @@ class _HomeState extends State<Home> {
       }
 
       i += 1;
-    } else { */
-    if (entry == 'entry') {
-      setState(() {
-        _isInsideZone = true;
-      });
-
-      notification.scheduleNotification(
-        title: 'Geofence zone',
-        subtitle: 'You are now in geofence zone.',
-      );
     } else {
-      setState(() {
-        _isInsideZone = false;
-      });
+      if (entry == 'ENTRY') {
+        setState(() {
+          _isInsideZone = true;
+        });
 
-      notification.scheduleNotification(
-        title: 'Geofence zone',
-        subtitle: 'You are no longer in the geofence zone.',
-      );
+        notification.scheduleNotification(
+          title: 'Geofence zone',
+          subtitle: 'You are now in geofence zone.',
+        );
+      } else {
+        setState(() {
+          _isInsideZone = false;
+        });
+
+        notification.scheduleNotification(
+          title: 'Geofence zone',
+          subtitle: 'You are no longer in the geofence zone.',
+        );
+      }
     }
-    // }
   }
 
-  // _listenForLocationChanges() {
-  //   Geofence.startListeningForLocationChanges();
-  //   Geofence.backgroundLocationUpdated.stream.listen((event) {
-  //     // check if user is still in the zone
-  //     _getZoneStatus();
-  //   });
-  // }
-
-  Future<void> _getCurrentLocation() async {
+  Future<void> _getLocationPermission() async {
     setState(() {
       _isLoading = true;
     });
@@ -191,7 +253,7 @@ class _HomeState extends State<Home> {
       location = Geolocation(
           latitude: zoneLocations[i].latitude!,
           longitude: zoneLocations[i].longitude!,
-          radius: 1000.0,
+          radius: 500.0,
           id: "location_$i");
 
       Geofence.addGeolocation(location, GeolocationEvent.entry).then((onValue) {
@@ -207,28 +269,28 @@ class _HomeState extends State<Home> {
   }
 
   // Future<void> _calculateDistanceToZone() async {
-  // for (int i = 0; i < zoneLocations.length; i += 1) {
-  //   double distanceInKm = await location.getDistance(
-  //     userLatitude: location.latitude,
-  //     userLongitude: location.longitude,
-  //     destLatitude: zoneLocations[i].latitude!,
-  //     destLongitude: zoneLocations[i].longitude!,
-  //   );
+  //   for (int i = 0; i < zoneLocations.length; i += 1) {
+  //     double distanceInMeters = await location.getDistance(
+  //       userLatitude: location.latitude,
+  //       userLongitude: location.longitude,
+  //       destLatitude: zoneLocations[i].latitude!,
+  //       destLongitude: zoneLocations[i].longitude!,
+  //     );
 
-  //   print(distanceInKm);
+  //     print(distanceInMeters);
 
-  //   // if (distanceInKm <= 0.15) {
-  //   //   setState(() {
-  //   //     _isInsideZone = true;
-  //   //   });
-  //   // } else {
-  //   //   setState(() {
-  //   //     _isInsideZone = false;
-  //   //   });
-  //   // }
-
-  //   // zoneRepo[i].distance = distanceInKm;
+  // if (distanceInMeters <= 0.15) {
+  //   setState(() {
+  //     _isInsideZone = true;
+  //   });
+  // } else {
+  //   setState(() {
+  //     _isInsideZone = false;
+  //   });
   // }
+
+  // zoneRepo[i].distance = distanceInKm;
+  //   }
   // }
 
   /* void _addMarker({required double latitude, required double longitude}) {
