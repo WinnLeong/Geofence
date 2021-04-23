@@ -1,9 +1,10 @@
 ![](display/demo_1.gif)
-<h1> Demo 1</h1>
-<br />
+
+<p></p>
+
 
 ![](display/demo_2.gif)
-<h1> Demo 2</h1>
+
 
 Requirements
 
