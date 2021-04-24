@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_geofence/geofence.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geofence_test/util/constants.dart';
+import 'package:geofence_test/util/wifi_info.dart';
 import 'package:geofence_test/view/home/home.dart';
 
 import 'util/notifications.dart';
@@ -53,7 +54,7 @@ class _MyAppState extends State<MyApp> {
     // Initialize flutter_geofence
     Geofence.initialize();
 
-    Geofence.requestPermissions();
+    // Geofence.requestPermissions();
   }
 
   @override

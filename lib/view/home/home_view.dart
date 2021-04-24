@@ -12,6 +12,7 @@ import 'package:geofence_test/util/notifications.dart';
 import 'package:geofence_test/util/wifi_info.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:wifi_info_flutter/wifi_info_flutter.dart';
 // import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 class Home extends StatefulWidget {
@@ -25,10 +26,12 @@ class _HomeState extends State<Home> {
 
   // repo
   final List<LocationData> zoneLocations = ZoneRepo().getZoneLocations();
-  final List<WifiInfo> locationWifiInfo = ZoneRepo().getWifiNames();
+  final List<WifiData> locationWifiInfo = ZoneRepo().getWifiNames();
 
   // flutter_wifi_info
-  final GetWifiInfo deviceWifiInfo = GetWifiInfo();
+  final GetWifiInfo _getWifiInfo = GetWifiInfo();
+  LocationAuthorizationStatus? locationAuthorizationStatus;
+  String? wifiName;
 
   final Location location = Location();
   final CustomDialog customDialog = CustomDialog();
@@ -59,142 +62,6 @@ class _HomeState extends State<Home> {
     //   print(
     //       "Your latitude is ${coordinate!.latitude} and longitude ${coordinate.longitude}");
     // });
-
-    Geofence.startListening(GeolocationEvent.entry, (entry) {
-      _getZoneStatus(entry: 'ENTRY');
-    });
-
-    Geofence.startListening(GeolocationEvent.exit, (exit) {
-      _getZoneStatus(entry: 'EXIT');
-    });
-
-    _listenForLocationChanges();
-  }
-
-  _listenForLocationChanges() {
-    Geofence.startListeningForLocationChanges();
-    Geofence.backgroundLocationUpdated.stream.listen((event) async {
-      // check if user is still in the zone
-
-      String? wifiName = await deviceWifiInfo.getWifiName();
-      String? savedWifiName = await localStorage.getWifiName();
-
-      double? zoneLatitude = await localStorage.getLocationLatitude();
-      double? zoneLongitude = await localStorage.getLocationLongitude();
-
-      if (zoneLatitude != 0.0 && zoneLongitude != 0.0) {
-        await location.getCurrentLocation();
-
-        double distanceInMeters = await location.getDistance(
-          userLatitude: location.latitude,
-          userLongitude: location.longitude,
-          destLatitude: zoneLatitude!,
-          destLongitude: zoneLongitude!,
-        );
-
-        // if wifiName is available
-        if (wifiName != null) {
-          if (wifiName == savedWifiName || distanceInMeters < 500) {
-            setState(() {
-              _isInsideZone = true;
-            });
-
-            print('User is still in geofence zone.');
-          } else {
-            setState(() {
-              _isInsideZone = false;
-            });
-
-            print('User is no longer in geofence zone.');
-
-            localStorage.clear();
-          }
-        }
-        // else {
-        //   // determine the zone based on distance if there is no wifi info
-        //   if (distanceInMeters < 500) {
-        //     setState(() {
-        //       _isInsideZone = true;
-        //     });
-
-        //     print('User is still in geofence zone.');
-        //   } else {
-        //     setState(() {
-        //       _isInsideZone = false;
-        //     });
-
-        //     print('User is no longer in geofence zone.');
-
-        //     localStorage.clear();
-        //   }
-        // }
-      }
-    });
-
-    setState(() {});
-  }
-
-  Future<void> _getZoneStatus({entry}) async {
-    String? wifiName = await deviceWifiInfo.getWifiName();
-    int i = 0;
-
-    // if zoneStatus is entry
-    if (entry == 'ENTRY') {
-      await location.getCurrentLocation();
-
-      localStorage.saveLocationLatitude(location.latitude);
-      localStorage.saveLocationLongitude(location.longitude);
-    }
-
-    if (wifiName != null) {
-      localStorage.saveWifiName(wifiName);
-
-      while (i < locationWifiInfo.length) {
-        if (wifiName == locationWifiInfo[i].name) {
-          setState(() {
-            _isInsideZone = true;
-          });
-
-          notification.scheduleNotification(
-            title: 'Geofence zone',
-            subtitle: 'You are now in geofence zone.',
-          );
-
-          break;
-        } else {
-          setState(() {
-            _isInsideZone = false;
-          });
-
-          notification.scheduleNotification(
-            title: 'Geofence zone',
-            subtitle: 'You are no longer in the geofence zone.',
-          );
-        }
-      }
-
-      i += 1;
-    } else {
-      if (entry == 'ENTRY') {
-        setState(() {
-          _isInsideZone = true;
-        });
-
-        notification.scheduleNotification(
-          title: 'Geofence zone',
-          subtitle: 'You are now in geofence zone.',
-        );
-      } else {
-        setState(() {
-          _isInsideZone = false;
-        });
-
-        notification.scheduleNotification(
-          title: 'Geofence zone',
-          subtitle: 'You are no longer in the geofence zone.',
-        );
-      }
-    }
   }
 
   Future<void> _getLocationPermission() async {
@@ -204,6 +71,8 @@ class _HomeState extends State<Home> {
 
     LocationPermission permission = await location.checkLocationPermission();
 
+    await GetWifiInfo().getWifiAuthorization();
+
     if (permission == LocationPermission.whileInUse ||
         permission == LocationPermission.always) {
       await location.getCurrentLocation();
@@ -211,6 +80,16 @@ class _HomeState extends State<Home> {
       // _addMarker(latitude: location.latitude, longitude: location.longitude);
       _moveCamera();
       // _addGeoregion();
+
+      Geofence.startListening(GeolocationEvent.entry, (entry) {
+        _getZoneStatus(entry: 'ENTRY');
+      });
+
+      Geofence.startListening(GeolocationEvent.exit, (exit) {
+        _getZoneStatus(entry: 'EXIT');
+      });
+
+      _listenForLocationChanges();
     } else {
       // if default location permission window doesn't show up
       customDialog.show(
@@ -268,6 +147,144 @@ class _HomeState extends State<Home> {
     // _calculateDistanceToZone();
   }
 
+  Future<void> _getZoneStatus({entry}) async {
+    wifiName = await _getWifiInfo.getWifiName();
+    int i = 0;
+
+    // if zoneStatus is entry
+    if (entry == 'ENTRY') {
+      await location.getCurrentLocation();
+
+      localStorage.saveLocationLatitude(location.latitude);
+      localStorage.saveLocationLongitude(location.longitude);
+    }
+
+    if (wifiName != null) {
+      localStorage.saveWifiName(wifiName!);
+
+      while (i < locationWifiInfo.length) {
+        if (wifiName == locationWifiInfo[i].name) {
+          setState(() {
+            _isInsideZone = true;
+          });
+
+          notification.scheduleNotification(
+            title: 'Geofence zone',
+            subtitle: 'You are now in geofence zone.',
+          );
+
+          break;
+        } else {
+          setState(() {
+            _isInsideZone = false;
+          });
+
+          notification.scheduleNotification(
+            title: 'Geofence zone',
+            subtitle: 'You are no longer in the geofence zone.',
+          );
+        }
+      }
+
+      i += 1;
+    } else {
+      if (entry == 'ENTRY') {
+        setState(() {
+          _isInsideZone = true;
+        });
+
+        notification.scheduleNotification(
+          title: 'Geofence zone',
+          subtitle: 'You are now in geofence zone.',
+        );
+      } else {
+        setState(() {
+          _isInsideZone = false;
+        });
+
+        notification.scheduleNotification(
+          title: 'Geofence zone',
+          subtitle: 'You are no longer in the geofence zone.',
+        );
+      }
+    }
+  }
+
+  _listenForLocationChanges() {
+    Geofence.startListeningForLocationChanges();
+    Geofence.backgroundLocationUpdated.stream.listen((event) async {
+      // check if user is still in the zone
+      wifiName = await _getWifiInfo.getWifiName();
+      print('listen for location changes $wifiName');
+
+      String? savedWifiName = await localStorage.getWifiName();
+
+      double? zoneLatitude = await localStorage.getLocationLatitude();
+      double? zoneLongitude = await localStorage.getLocationLongitude();
+
+      if (zoneLatitude != 0.0 && zoneLongitude != 0.0) {
+        await location.getCurrentLocation();
+
+        double distanceInMeters = await location.getDistance(
+          userLatitude: location.latitude,
+          userLongitude: location.longitude,
+          destLatitude: zoneLatitude!,
+          destLongitude: zoneLongitude!,
+        );
+
+        // if wifiName is available
+        if (wifiName != null) {
+          if (wifiName == savedWifiName || distanceInMeters < 500) {
+            setState(() {
+              _isInsideZone = true;
+            });
+
+            print('User is still in geofence zone.');
+          } else {
+            setState(() {
+              _isInsideZone = false;
+            });
+
+            print('User is no longer in geofence zone.');
+
+            localStorage.clear();
+          }
+        }
+        // else {
+        //   // determine the zone based on distance if there is no wifi info
+        //   if (distanceInMeters < 500) {
+        //     setState(() {
+        //       _isInsideZone = true;
+        //     });
+
+        //     print('User is still in geofence zone.');
+        //   } else {
+        //     setState(() {
+        //       _isInsideZone = false;
+        //     });
+
+        //     print('User is no longer in geofence zone.');
+
+        //     localStorage.clear();
+        //   }
+        // }
+      }
+    });
+
+    setState(() {});
+  }
+
+  void _moveCamera() async {
+    CameraPosition _currentCameraPosition = CameraPosition(
+        target: LatLng(location.latitude, location.longitude), zoom: 18);
+
+    final GoogleMapController controller = await _controller.future;
+    controller
+        .moveCamera(CameraUpdate.newCameraPosition(_currentCameraPosition));
+
+    // _updateMarker(_currentCameraPosition);
+  }
+
   // Future<void> _calculateDistanceToZone() async {
   //   for (int i = 0; i < zoneLocations.length; i += 1) {
   //     double distanceInMeters = await location.getDistance(
@@ -307,17 +324,6 @@ class _HomeState extends State<Home> {
       markers[markerId] = marker;
     });
   } */
-
-  void _moveCamera() async {
-    CameraPosition _currentCameraPosition = CameraPosition(
-        target: LatLng(location.latitude, location.longitude), zoom: 18);
-
-    final GoogleMapController controller = await _controller.future;
-    controller
-        .moveCamera(CameraUpdate.newCameraPosition(_currentCameraPosition));
-
-    // _updateMarker(_currentCameraPosition);
-  }
 
   // void _updateMarker(CameraPosition cameraPos) {
   //   final Marker marker = markers[selectedMarker]!;

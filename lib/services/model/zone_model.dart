@@ -50,15 +50,15 @@ class LocationData {
 
 // Wifi info
 class WifiNames {
-  List<WifiInfo>? wifiInfo;
+  List<WifiData>? wifiInfo;
 
   WifiNames({this.wifiInfo});
 
   WifiNames.fromJson(Map<String, dynamic> json) {
     if (json['wifi_info'] != null) {
-      wifiInfo = new List<WifiInfo>.empty(growable: true);
+      wifiInfo = new List<WifiData>.empty(growable: true);
       json['wifi_info'].forEach((v) {
-        wifiInfo!.add(new WifiInfo.fromJson(v));
+        wifiInfo!.add(new WifiData.fromJson(v));
       });
     }
   }
@@ -72,12 +72,12 @@ class WifiNames {
   }
 }
 
-class WifiInfo {
+class WifiData {
   String? name;
 
-  WifiInfo({this.name});
+  WifiData({this.name});
 
-  WifiInfo.fromJson(Map<String, dynamic> json) {
+  WifiData.fromJson(Map<String, dynamic> json) {
     name = json['name'];
   }
 
