@@ -19,6 +19,7 @@ On iOS simulator menu select Features > Location to get the following window:
 
 
 The following demonstrations are tested on an iOS simulator with iOS version 14.4.
+The project currently only works on iOS as it was initially built using iOS simulator.
 
 Follow the demo images to test geofencing features. Interchange your coordinates outside and inside the zone will trigger the notification pop up as well as update the zone status in the app. The feature works even when the app is closed. You can set your own geofence region within the app or use the preset locations listed below.
 
