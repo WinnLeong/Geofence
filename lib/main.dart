@@ -1,16 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_geofence/geofence.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:geofence_test/services/provider/location_model.dart';
 import 'package:geofence_test/util/constants.dart';
-import 'package:geofence_test/util/wifi_info.dart';
 import 'package:geofence_test/view/home/home.dart';
+import 'package:provider/provider.dart';
 
+import 'services/provider/geofence_model.dart';
 import 'util/notifications.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  runApp(MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (context) => GeofenceModel(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => LocationModel(),
+        ),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {

@@ -5,6 +5,22 @@
 
 ![](display/demo_2.gif)
 
+<p></p>
+
+
+![](display/demo_3.gif)
+
+
+How to set coordinates:
+On iOS simulator menu select Features > Location to get the following window:
+
+
+![](display/set_coordinates.png)
+
+
+The following demonstrations are tested on an iOS simulator with iOS version 14.4.
+
+Follow the demo images to test geofencing features. Interchange your coordinates outside and inside the zone will trigger the notification pop up as well as update the zone status in the app. The feature works even when the app is closed. You can set your own geofence region within the app or use the preset locations listed below.
 
 Requirements
 
@@ -17,11 +33,15 @@ Requirements
 
 Flutter packages
 
-	• wifi_info_flutter (getWifiName/getWifiBSSID)
-	• geofencing / flutter_geofence
-	• Geolocator (calculate the distance towards geofence location)
-	• Flutter_local_notifications (notifying user of entering geofencing location)
-	• Google_maps_flutter
+	• wifi_info_flutter (getWifiName/getWifiSSID)
+	• flutter_geofence
+	• Geolocator (foreground location and calculate distance)
+	• Flutter_local_notifications (notifying user of geofencing)
+	• Google_maps_flutter (Display user location)
+	• Provider (State management)
+	• Sliding_up_panel (Add geofence form)
+	• Permission_handler (Used to get wifi location permission)
+	• Shared_preferences (Local device storage)
 	
 ToDos 
 Main function: 
@@ -31,14 +51,16 @@ Main function:
 	• Set a few locations (petronas stations) to be targeted vicinities 
 	• If user is connected to the vicinity wifi then consider the user to be inside the zone 
 	• Ensure that alert still triggers when app is not running 
+	• Add custom geofence region
 
 Additional functions: 
 
 	• Display Google map in app UI  
 	• Mark user location in realtime 
+	• Create unit tests 
 
 
-Locations: 
+Preset Locations: 
 <br />
 <b>Petronas Ara Damansara</b>
 <br />
