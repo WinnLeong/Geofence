@@ -36,10 +36,10 @@ class GetWifiInfo {
     }
   }
 
-  Future<String> getWifiName() async {
+  Future<String?> getWifiName() async {
     wifiName = await wifiInfo.getWifiName();
 
-    return wifiName!;
+    return wifiName;
   }
 
   // Future<String> getWifiSSID() async {

@@ -26,11 +26,6 @@ class ZoneRepo {
             "latitude": 2.806143,
             "longitude": 101.7163006,
             "address": "Petronas Bandar Baru Salak Tinggi"
-        },
-        {
-            "latitude": 5.405330,
-            "longitude": 100.412180,
-            "address": "Taman Seri Arowana"
         }
     ]
   }

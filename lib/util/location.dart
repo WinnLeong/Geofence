@@ -1,17 +1,18 @@
 import 'dart:async';
 
+import 'package:geofence_test/services/provider/location_model.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:provider/provider.dart';
 
 class Location {
-  double latitude = 0;
-  double longitude = 0;
-
-  Future<void> getCurrentLocation() async {
+  Future<void> getCurrentLocation({required context}) async {
     Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation);
 
-    latitude = position.latitude;
-    longitude = position.longitude;
+    Provider.of<LocationModel>(context, listen: false).setLocationCoordinates(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
   }
 
   Future<LocationPermission> checkLocationPermission() async {
