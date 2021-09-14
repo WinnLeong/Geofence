@@ -28,9 +28,6 @@ Requirements
 	• Setup Geofencing area
 	• Detect geofencing status based on wifi network and geographic point
 	• Display status on app for inside or outside geofence area
-	• Host source code privately on GitHub
-	• Create readme with instructions
-	• Grant access to engineering@setel.my
 
 Flutter packages
 
